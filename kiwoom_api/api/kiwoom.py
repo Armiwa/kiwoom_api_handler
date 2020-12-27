@@ -602,12 +602,27 @@ class Kiwoom(QAxWidget):
         self.requestLoop.exec_()
 
     # 조건식 관련
+
+    # 조건식 다운로드
     def getConditionLoad(self):
         if not self.condition_loaded:
             self.logger.debug('조건식 다운로드 요청')
             self.dynamicCall('GetConditionLoad()')
             self.conditionLoop = QEventLoop()
             self.conditionLoop.exec_()
+
+    # 조건식 이름 목록 가져오기
+    def getConditionNameList(self):
+        data = self.dynamicCall('GetConditionNameList()')
+        data = data.split(";")[:-1]
+
+        result = []
+
+        for row in data:
+            cond_index, cond_name = row.split('^')
+            result.append((cond_index, cond_name))
+
+        return result
 
     ###############################################################
     ################### 주문과 잔고처리 관련 메서드 #################
