@@ -48,6 +48,9 @@ class Kiwoom(QAxWidget):
         # 서버구분
         self.serverStatus = None
 
+        # 조건식 다운로드 여부
+        self.condition_loaded = False
+
         # 연속조회구분
         self.isNext = 0
 
@@ -67,6 +70,7 @@ class Kiwoom(QAxWidget):
         self.OnReceiveTrData.connect(self.eventReceiveTrData)
         self.OnReceiveChejanData.connect(self.eventReceiveChejanData)
         self.OnReceiveMsg.connect(self.eventReceiveMsg)
+        self.OnReceiveConditionVer.connect(self.eventConditionLoad)
 
     @property
     def log_path(self):
@@ -248,7 +252,13 @@ class Kiwoom(QAxWidget):
                 writeJson(resultDict, file_path)
             except Exception as e:
                 self.logger.error(f'ERROR: Order JSON logging {e}')
-        
+
+    def eventConditionLoad(self, ret, msg):
+        if ret == 1:
+            self.condition_loaded = True
+            self.conditionLoop.exit()
+            self.logger.debug('조건식 다운로드 완료')
+
     ###############################################################
     #################### 로그인 관련 메서드   ######################
     ###############################################################
@@ -590,6 +600,14 @@ class Kiwoom(QAxWidget):
         self.requestLoop = QEventLoop()
         QTimer.singleShot(1000, self.requestLoop.exit)  # timout in 1000 ms
         self.requestLoop.exec_()
+
+    # 조건식 관련
+    def getConditionLoad(self):
+        if not self.condition_loaded:
+            self.logger.debug('조건식 다운로드 요청')
+            self.dynamicCall('GetConditionLoad()')
+            self.conditionLoop = QEventLoop()
+            self.conditionLoop.exec_()
 
     ###############################################################
     ################### 주문과 잔고처리 관련 메서드 #################
